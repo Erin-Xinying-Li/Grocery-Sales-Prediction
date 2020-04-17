@@ -1,0 +1,13 @@
+library(glmnet)
+library(earth)
+library(MASS)
+library(tree)
+library(dplyr)
+library(readxl)
+library(gbm)
+library(randomForest)
+library(readxl)
+# 
+Model_list = c("lasso","MARS","linear","ridge","RegressionTree","Boosted","Bagging","RandomForest")
+files=list.files(pattern="*.xlsx")
+store=lapply(files,read_excel) 
