@@ -14,5 +14,5 @@ The  goal  is  to  predict sales of each product category forall thestores.
 
 ##  Extract of Final Report
 To make weekly plans of inventory and shelf spaces for each store and weekly product replenishment orders for suppliers, we, from the headquarter office of a retail chain, used products information from 8 stores to build a relatively accurate forecast model.
-Based on all data from 8 store each with 24 products, 4 related variables and 1 sales value divided into training data and test data, we aimed to establish 8 \cdot 24 models to forecast sales. 
+Based on all data from 8 store each with 24 products, 4 related variables and 1 sales value divided into training data and test data, we aimed to establish 8 $\times$ 24 models to forecast sales. 
 The highlight of our research is that is we tune model and data according to the features of data so as to increase our predictability-- to attain prediction error, RMSE, as small as possible. As a result, we adopted 11 prediction methods and then adjusted parameters of them in order make a better prediction. Overall, we discover that Boosting domains all the models to have the best performance on our dataset to predict sales. But anyway, we fit the best model to every product of every store to get minimum RMSE that we can get.
