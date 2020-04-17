@@ -1,0 +1,152 @@
+---
+title: "for loop"
+author: "Xinying Li"
+date: "November 18, 2018"
+output: pdf_document
+---
+```{r}
+library(glmnet)
+library(earth)
+library(MASS)
+library(tree)
+library(dplyr)
+library(readxl)
+library(gbm)
+library(randomForest)
+library(readxl)
+# 
+Model_list = c("lasso","MARS","linear","ridge","RegressionTree","Boosted","Bagging","RandomForest")
+files=list.files(pattern="*.xlsx")
+store=lapply(files,read_excel) 
+
+Optmd<- function (train,test,y,y_test){
+  RMSE_l=c()
+  for (method in Model_list){
+    loopvalue=match.fun(method)
+    RMSE_l = append(RMSE_l,loopvalue(train,test,y,y_test))
+  }
+  RMSE = min(RMSE_l)
+  min_index = which.min(RMSE_l)
+  model_name = Model_list[min_index]
+  returnthings=c(RMSE,model_name)
+  return(returnthings)
+  }
+
+lasso <- function(train, test, y, y_test){
+  x = model.matrix(y~f+d+pr+p,data = train)[,-1]
+  grid=10^seq(10,-2,length=100)
+  model1= glmnet(x,y,alpha = 1,lambda=grid,thresh = 1e-12)
+  model2= cv.glmnet(x,y,alpha = 1, lambda = grid,thresh = 1e-12) #cross-validation
+  bestlambda = model2$lambda.min
+  newx = data.matrix(test)
+  predict = predict(model2,s = bestlambda,newx=newx,type = 'response')
+  RMSE=sqrt(mean((y_test-predict)^2))
+  
+  return(RMSE)
+}
+
+ridge <- function(train, test, y, y_test){
+  x = model.matrix(y~f+d+pr+p,data = train)[,-1]
+  grid=10^seq(10,-2,length=100)
+  model1= glmnet(x,y,alpha = 0,lambda=grid,thresh = 1e-12)
+  model2= cv.glmnet(x,y,alpha = 0, lambda = grid,thresh = 1e-12) #cross-validation
+  bestlambda = model2$lambda.min
+  newx = data.matrix(test)
+  predict = predict(model2,s = bestlambda,newx=newx,type = 'response')
+  RMSE=sqrt(mean((y_test-predict)^2))
+
+  return(RMSE)
+}
+
+linear<- function(train, test, y, y_test){
+  model=lm(y~f+d+pr+p, data=train)
+  predict=predict(model,test)
+  RMSE=sqrt(mean((y_test-predict)^2))
+
+  return(RMSE)
+}
+
+MARS <- function(train,test,y,y_test){
+  model=earth(train,y,degree = 1)
+  predict = predict(model,newdata=test)
+  RMSE=sqrt(mean((y_test-predict)^2))
+
+  return(RMSE)
+}
+
+RegressionTree <- function(train,test,y,y_test){
+  model= tree(y~f+d+pr+p,data = train)
+  predict= predict(model,test)
+  RMSE=sqrt(mean((y_test-predict)^2))
+
+  return(RMSE)
+}
+
+Boosted <-function(train,test,y,y_test){
+  model =gbm(y~f+d+pr+p,data=train,distribution="gaussian", n.trees=5000,interaction.depth=4)
+  predict=predict(model,newdata=test,n.trees=5000)
+  RMSE=sqrt(mean((y_test-predict)^2))
+
+  return(RMSE)
+}
+
+Bagging <- function(train,test,y,y_test){
+  model= randomForest(y~f+d+pr+p,data = train, mtry = 4,importance = TRUE )
+  predict = predict(model,newdata = test)
+  RMSE = sqrt(mean((y_test-predict)^2))
+
+  return(RMSE)
+}
+
+RandomForest <- function(train,test,y, y_test){
+  model = randomForest(y~f+d+pr+p, data = train, mtry = 2, importance = TRUE)
+  predict = predict(model, newdata = test)
+  RMSE = sqrt(mean((y_test-predict)^2))
+  return(RMSE)
+}
+
+
+RMSE=matrix(0,8,24)
+Rmodel=matrix(0,8,24)
+for (j in 1:8) {
+    attach(store[[j]])
+    F_=cbind(F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12,F13,F14,F15,F16,F17,F18,F19,F20,F21,F22,F23,F24)
+    D=cbind(D1,D2,D3,D4,D5,D6,D7,D8,D9,D10,D11,D12,D13,D14,D15,D16,D17,D18,D19,D20,D21,D22,D23,D24)
+    PR=cbind(PR1,PR2,PR3,PR4,PR5,PR6,PR7,PR8,PR9,PR10,PR11,PR12,PR13,PR14,PR15,PR16,PR17,PR18,PR19,PR20,PR21,PR22,PR23,PR24)
+    P=cbind(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14,P15,P16,P17,P18,P19,P20,P21,P22,P23,P24)
+    Y=cbind(Y1,Y2,Y3,Y4,Y5,Y6,Y7,Y8,Y9,Y10,Y11,Y12,Y13,Y14,Y15,Y16,Y17,Y18,Y19,Y20,Y21,Y22,Y23,Y24)
+    F_train=filter(data.frame(F_),Random =='Train')
+    F_test=filter(data.frame(F_),Random =='Test')
+    D_train=filter(data.frame(D),Random =='Train')
+    D_test=filter(data.frame(D),Random =='Test')
+    PR_train=filter(data.frame(PR),Random =='Train')
+    PR_test=filter(data.frame(PR),Random =='Test')
+    P_train=filter(data.frame(P),Random =='Train')
+    P_test=filter(data.frame(P),Random =='Test')
+    Y_train=filter(data.frame(Y),Random =='Train')
+    Y_test=filter(data.frame(Y),Random =='Test')
+    
+    for (i in 1:24) {
+      y=Y_train[,i]
+      f=F_train[,i]
+      d=D_train[,i]
+      pr=PR_train[,i]
+      p=P_train[,i]
+      train = data.frame(f,d,pr,p)
+      f=F_test[,i]
+      d=D_test[,i]
+      pr=PR_test[,i]
+      p=P_test[,i]
+      y_test = Y_test[,i]
+      test = data.frame(f,d,pr,p)
+      returned=Optmd(train,test,y,y_test)
+      RMSE[j,i] = returned[1]
+      Rmodel[j,i]= returned[2]
+    }
+    detach(store[[j]])
+  }
+print(RMSE)
+print(Rmodel)
+
+```
+
